@@ -97,6 +97,8 @@ class ImageRemoteMediator(
             "text" to query,
             "per_page" to perPage,
             "page" to page,
+            "safe_search" to "1",
+            "content_type" to "1",
             "format" to "json",
             "nojsoncallback" to "1"
         )
