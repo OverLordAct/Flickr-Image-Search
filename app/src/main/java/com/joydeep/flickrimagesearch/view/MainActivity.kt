@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         initAdapter()
-        initSearch()
+        initTextInput()
     }
 
     private fun initAdapter() {
@@ -95,10 +95,6 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.isVisible = !show
     }
 
-    private fun search(searchString: String) {
-        viewModel.getImages(searchString)
-    }
-
     override fun onBackPressed() {
         if (binding.recyclerView.computeVerticalScrollOffset() != 0) {
             binding.recyclerView.smoothScrollToPosition(0)
@@ -107,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         super.onBackPressed()
     }
 
-    private fun initSearch() {
+    private fun initTextInput() {
         viewModel.currentQueryString.observe(this) {
             binding.searchInput.setText(it ?: "")
         }
@@ -115,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         binding.searchInput.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 binding.searchInput.hideKeyBoard(this)
-                updateRepoListFromInput()
+                searchWithQuery()
                 true
             } else {
                 false
@@ -123,10 +119,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateRepoListFromInput() {
+    private fun searchWithQuery() {
         binding.searchInput.text?.trim()?.let {
             if (it.isNotEmpty()) {
-                search(it.toString())
+                viewModel.getImages(it.toString())
             }
         }
     }

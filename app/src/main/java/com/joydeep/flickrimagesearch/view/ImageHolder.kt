@@ -24,7 +24,6 @@ class ImageHolder(private val binding: HolderImageBinding) : RecyclerView.ViewHo
         Glide.with(binding.root.context)
             .load(url)
             .centerCrop()
-//            .transition(DrawableTransitionOptions.withCrossFade())
             .placeholder(shimmerDrawable)
             .into(binding.imageView)
     }
