@@ -1,4 +1,4 @@
-package com.joydeep.flickrimagesearch.view
+package com.joydeep.flickrimagesearch.view.activity
 
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
@@ -10,8 +10,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.joydeep.flickrimagesearch.databinding.ActivityMainBinding
+import com.joydeep.flickrimagesearch.utils.ConnectivityWatcher
 import com.joydeep.flickrimagesearch.utils.hideKeyBoard
+import com.joydeep.flickrimagesearch.view.adapter.ImageLoadStateAdapter
+import com.joydeep.flickrimagesearch.view.adapter.ImagePagingAdapter
 import com.joydeep.flickrimagesearch.viewmodel.MainActivityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +32,12 @@ class MainActivity : AppCompatActivity() {
     @ExperimentalCoroutinesApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        ConnectivityWatcher(this).observe(this) {
+            if (it == false) {
+                Snackbar.make(binding.root, "No Internet Available", Snackbar.LENGTH_SHORT).show()
+            }
+        }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

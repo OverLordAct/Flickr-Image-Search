@@ -1,4 +1,4 @@
-package com.joydeep.flickrimagesearch.view
+package com.joydeep.flickrimagesearch.view.viewholder
 
 import androidx.core.view.isVisible
 import androidx.paging.LoadState

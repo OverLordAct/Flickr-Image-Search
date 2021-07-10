@@ -1,4 +1,4 @@
-package com.joydeep.flickrimagesearch.view
+package com.joydeep.flickrimagesearch.view.viewholder
 
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide

@@ -1,4 +1,4 @@
-package com.joydeep.flickrimagesearch.view
+package com.joydeep.flickrimagesearch.view.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,6 +6,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.joydeep.flickrimagesearch.databinding.HolderImageBinding
 import com.joydeep.flickrimagesearch.model.Image
+import com.joydeep.flickrimagesearch.view.viewholder.ImageHolder
 
 class ImagePagingAdapter : PagingDataAdapter<Image, ImageHolder>(ImageHolderComparator()) {
 
