@@ -2,7 +2,6 @@ package com.joydeep.flickrimagesearch.view
 
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.facebook.shimmer.Shimmer
 import com.facebook.shimmer.ShimmerDrawable
 import com.joydeep.flickrimagesearch.databinding.HolderImageBinding
@@ -24,9 +23,12 @@ class ImageHolder(private val binding: HolderImageBinding) : RecyclerView.ViewHo
     fun bind(url: String) {
         Glide.with(binding.root.context)
             .load(url)
-            .transition(DrawableTransitionOptions.withCrossFade())
+            .centerCrop()
+//            .transition(DrawableTransitionOptions.withCrossFade())
             .placeholder(shimmerDrawable)
             .into(binding.imageView)
+
+        binding.textView.text = url
     }
 
 }

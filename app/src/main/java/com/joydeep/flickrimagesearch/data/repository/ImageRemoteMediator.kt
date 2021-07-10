@@ -1,5 +1,6 @@
 package com.joydeep.flickrimagesearch.data.repository
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -7,8 +8,10 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.joydeep.flickrimagesearch.data.api.ApiService
 import com.joydeep.flickrimagesearch.data.db.ImageDatabase
-import com.joydeep.flickrimagesearch.model.Photo
+import com.joydeep.flickrimagesearch.model.PhotoEntity
+import com.joydeep.flickrimagesearch.model.PhotoEntity2
 import com.joydeep.flickrimagesearch.model.RemoteKey
+import com.joydeep.flickrimagesearch.viewmodel.TEST
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -17,106 +20,127 @@ class ImageRemoteMediator(
     private val query: String,
     private val service: ApiService,
     private val imageDatabase: ImageDatabase
-) : RemoteMediator<Int, Photo>() {
+) : RemoteMediator<Int, PhotoEntity2>() {
 
     companion object {
         private const val INITIAL_PAGE = 1
-        private const val API_KEY = "5cda947b931a0ade4161d0004589a7b0"
+        const val API_KEY = "5cda947b931a0ade4161d0004589a7b0"
     }
+
+    private val photoDao = imageDatabase.getPhoto2Dao()
+    private val remoteDao = imageDatabase.getRemoteKeyDao()
 
     override suspend fun load(
         loadType: LoadType,
-        state: PagingState<Int, Photo>
-    ): RemoteMediator.MediatorResult {
+        state: PagingState<Int, PhotoEntity2>
+    ): MediatorResult {
         val page = when (loadType) {
             LoadType.REFRESH -> {
-                // TODO: 09-07-2021 Check how page keys are handled
-                val remoteKey = getRemoteKeyForClosestItem(state)
-                remoteKey?.nextKey?.minus(1) ?: INITIAL_PAGE
-            }
-            LoadType.PREPEND -> {
-                val remoteKey = getRemoteKeyForFirstItem(state)
-                remoteKey?.prevKey
-                    ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
+                Log.d(TEST, "refresh page called")
+//                val remoteKey = getRemoteKeyForClosestItem(state)
+//                remoteKey?.nextKey ?: INITIAL_PAGE
+                INITIAL_PAGE
             }
             LoadType.APPEND -> {
-                val remoteKey = getRemoteKeyForLastItem(state)
-                remoteKey?.nextKey
-                    ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
+                Log.d(TEST, "append page called")
+                remoteDao.getRemoteKeyForQuery(query).nextKey
+            }
+            LoadType.PREPEND -> {
+                Log.d(TEST, "prepend page called")
+
+//                val remoteKey = getRemoteKeyForFirstItem(state)
+//                remoteKey?.prevKey
+//                    ?: return MediatorResult.Success(endOfPaginationReached = remoteKey != null)
+                return MediatorResult.Success(endOfPaginationReached = true)
             }
         }
 
-        // TODO: 09-07-2021 Build query param here
-        // https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=5cda947b931a0ade4161d0004589a7b0&text=cats&per_page=10&page=1&format=json&nojsoncallback=1
+        Log.d(TEST, "${state.config.pageSize}")
 
-        val map = mapOf(
-            "api_key" to API_KEY,
-            "text" to query,
-            "per_page" to state.config.pageSize.toString(),
-            "page" to page.toString(),
-            "format" to "json",
-            "nojsoncallback" to "1"
-        )
         try {
+            Log.d(TEST, "Inside try block")
+            val map = mapOf(
+                "api_key" to API_KEY,
+                "text" to query,
+                "per_page" to state.config.pageSize.toString(),
+                "page" to page.toString(),
+                "format" to "json",
+                "nojsoncallback" to "1"
+            )
             val response = service.getImageLinks(map)
-            val endOfPagination = response.photos.photo.isEmpty()
 
-            val images = response.photos.photo.map { photo ->
-                // TODO: 09-07-2021 Create url here
-                // https://live.staticflickr.com/{server-id}/{id}_{secret}_{size-suffix}.jpg
-                val url =
-                    "https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}.jpg"
-                Photo(
-                    id = photo.id,
-                    url = url,
-                    query = query
-                )
-            }
+            val photos = response.photos.photo
+            val endOfPagination = photos.isEmpty()
+
+            Log.d(TEST, "Inside try block2")
+
 
             imageDatabase.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    imageDatabase.getPhotoDao().clearImages()
-                    imageDatabase.getRemoteKeyDao().clearRemoteKeys()
+                    photoDao.deletePhotos()
+                    remoteDao.deleteRemoteKeys()
                 }
 
-                val prevKey = if (page == INITIAL_PAGE) null else page - 1
-                val nextKey = if (endOfPagination) null else page + 1
+                val lastQueryPosition = photoDao.getLastQueryPosition(query) ?: 0
+                var queryPosition = lastQueryPosition + 1
 
-                val keys = images.map { photo ->
-                    RemoteKey(photoId = photo.id, prevKey = prevKey, nextKey = nextKey)
+                val images = photos.map { photo ->
+                    val url =
+                        "https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}.jpg"
+                    PhotoEntity2(
+                        url = url,
+                        searchQuery = query,
+                        lastQueryPosition = queryPosition++
+                    )
                 }
 
-                imageDatabase.getPhotoDao().insertPhoto(images)
-                imageDatabase.getRemoteKeyDao().insertAll(keys)
+//                val prevKey = if (page == INITIAL_PAGE) null else page - 1
+                val nextKey = page + 1
+
+//                val keys = images.map { photo ->
+//                    RemoteKey(searchQuery = photo.searchQuery, prevKey = prevKey, nextKey = nextKey)
+//                }
+
+                val remoteKey = RemoteKey(searchQuery = query, prevKey = null, nextKey = nextKey)
+
+                Log.d(TEST, "Inside try block4")
+
+                photoDao.insertPhotos(images)
+                remoteDao.insertRemoteKey(remoteKey)
             }
             return MediatorResult.Success(endOfPaginationReached = endOfPagination)
         } catch (exception: IOException) {
+            exception.printStackTrace()
             return MediatorResult.Error(exception)
         } catch (exception: HttpException) {
+            exception.printStackTrace()
+
             return MediatorResult.Error(exception)
         } catch (exception: Exception) {
+            exception.printStackTrace()
+
             return MediatorResult.Error(exception)
         }
     }
 
-    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, Photo>): RemoteKey? =
+    private suspend fun getRemoteKeyForLastItem(state: PagingState<Int, PhotoEntity>): RemoteKey? =
         state.pages.lastOrNull {
             it.data.isNotEmpty()
         }?.data?.lastOrNull()?.let { photo ->
-            imageDatabase.getRemoteKeyDao().getRemoteKeyForId(photo.id)
+            imageDatabase.getRemoteKeyDao().getRemoteKeyForQuery(photo.searchQuery)
         }
 
-    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, Photo>): RemoteKey? =
+    private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, PhotoEntity>): RemoteKey? =
         state.pages.firstOrNull {
             it.data.isNotEmpty()
         }?.data?.firstOrNull()?.let { photo ->
-            imageDatabase.getRemoteKeyDao().getRemoteKeyForId(photo.id)
+            imageDatabase.getRemoteKeyDao().getRemoteKeyForQuery(photo.searchQuery)
         }
 
-    private suspend fun getRemoteKeyForClosestItem(state: PagingState<Int, Photo>): RemoteKey? =
+    private suspend fun getRemoteKeyForClosestItem(state: PagingState<Int, PhotoEntity>): RemoteKey? =
         state.anchorPosition?.let { position ->
-            state.closestItemToPosition(position)?.id?.let { id ->
-                imageDatabase.getRemoteKeyDao().getRemoteKeyForId(id)
+            state.closestItemToPosition(position)?.searchQuery?.let { searchQuery ->
+                imageDatabase.getRemoteKeyDao().getRemoteKeyForQuery(searchQuery)
             }
         }
 }

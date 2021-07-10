@@ -10,11 +10,11 @@ import com.joydeep.flickrimagesearch.model.RemoteKey
 interface RemoteKeyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(remoteKey: List<RemoteKey>)
+    suspend fun insertRemoteKey(remoteKey: RemoteKey)
 
-    @Query("SELECT * FROM remote_keys WHERE photoId = :photoId")
-    suspend fun getRemoteKeyForId(photoId: Long): RemoteKey?
+    @Query("SELECT * FROM remote_keys where searchQuery = :queryString")
+    suspend fun getRemoteKeyForQuery(queryString: String): RemoteKey
 
     @Query("DELETE FROM remote_keys")
-    suspend fun clearRemoteKeys()
+    suspend fun deleteRemoteKeys()
 }

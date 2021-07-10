@@ -5,17 +5,17 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.joydeep.flickrimagesearch.model.Photo
+import com.joydeep.flickrimagesearch.model.PhotoEntity
 
 @Dao
 interface PhotoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPhoto(photos: List<Photo>)
+    suspend fun insertPhoto(photoEntities: List<PhotoEntity>)
 
     @Query("delete from photo_master")
     suspend fun clearImages()
 
-    @Query("select * from photo_master where `query` like :query order by id asc")
-    fun getImageById(query: String): PagingSource<Int, Photo>
+    @Query("select * from photo_master where searchQuery = :queryString")
+    fun getImageByQuery(queryString: String): PagingSource<Int, PhotoEntity>
 }

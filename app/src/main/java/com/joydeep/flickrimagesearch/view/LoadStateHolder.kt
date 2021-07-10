@@ -1,7 +1,5 @@
 package com.joydeep.flickrimagesearch.view
 
-import android.view.LayoutInflater
-import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.RecyclerView
@@ -23,9 +21,5 @@ class LoadStateHolder(
         binding.retryButton.isVisible = loadState is LoadState.Error
         binding.progressBar.isVisible = loadState is LoadState.Loading
         binding.errorMessage.isVisible = loadState is LoadState.Error
-
-        if (loadState is LoadState.Error) {
-            binding.errorMessage.text = loadState.error.localizedMessage
-        }
     }
 }

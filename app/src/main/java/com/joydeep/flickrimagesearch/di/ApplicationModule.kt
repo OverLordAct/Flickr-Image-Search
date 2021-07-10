@@ -6,8 +6,6 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.joydeep.flickrimagesearch.data.api.ApiService
 import com.joydeep.flickrimagesearch.data.db.ImageDatabase
-import com.joydeep.flickrimagesearch.data.repository.ImageRepository
-import com.joydeep.flickrimagesearch.data.repository.ImageRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,14 +16,13 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class ApplicationModule {
+object ApplicationModule {
 
-    private val baseUrl = "https://www.flickr.com"
+    private const val baseUrl = "https://www.flickr.com"
 
     @Singleton
     @Provides
@@ -55,8 +52,6 @@ class ApplicationModule {
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(100, TimeUnit.SECONDS)
-            .readTimeout(100, TimeUnit.SECONDS)
             .build()
     }
 
@@ -82,11 +77,4 @@ class ApplicationModule {
             "image_db"
         ).fallbackToDestructiveMigration().build()
     }
-
-    @Provides
-    @Singleton
-    fun providesImageRepository(imageRepository: ImageRepositoryImpl): ImageRepository =
-        imageRepository
-
-
 }

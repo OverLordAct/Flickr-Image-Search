@@ -5,12 +5,14 @@ import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.joydeep.flickrimagesearch.databinding.HolderImageBinding
-import com.joydeep.flickrimagesearch.model.Photo
+import com.joydeep.flickrimagesearch.model.PhotoEntity
+import com.joydeep.flickrimagesearch.model.PhotoEntity2
 
-class ImageAdapter : PagingDataAdapter<Photo, ImageHolder>(ImageHolderComparator()) {
+class ImageAdapter : PagingDataAdapter<PhotoEntity2, ImageHolder>(ImageHolderComparator()) {
 
     override fun onBindViewHolder(holder: ImageHolder, position: Int) {
-        holder.bind(getItem(position)?.url ?: throw IllegalArgumentException("Item not found"))
+        val item = getItem(position)
+        item?.let { holder.bind(it.url) }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageHolder {
@@ -18,12 +20,12 @@ class ImageAdapter : PagingDataAdapter<Photo, ImageHolder>(ImageHolderComparator
         return ImageHolder(binding)
     }
 
-    class ImageHolderComparator : DiffUtil.ItemCallback<Photo>() {
-        override fun areItemsTheSame(oldItem: Photo, newItem: Photo): Boolean {
-            return oldItem.id == newItem.id
+    class ImageHolderComparator : DiffUtil.ItemCallback<PhotoEntity2>() {
+        override fun areItemsTheSame(oldItem: PhotoEntity2, newItem: PhotoEntity2): Boolean {
+            return oldItem.url == newItem.url
         }
 
-        override fun areContentsTheSame(oldItem: Photo, newItem: Photo): Boolean {
+        override fun areContentsTheSame(oldItem: PhotoEntity2, newItem: PhotoEntity2): Boolean {
             return oldItem == newItem
         }
     }
