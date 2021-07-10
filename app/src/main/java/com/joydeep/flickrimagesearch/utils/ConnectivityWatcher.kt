@@ -6,7 +6,6 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET
-import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
 import androidx.lifecycle.LiveData
 
 class ConnectivityWatcher(
@@ -33,8 +32,7 @@ class ConnectivityWatcher(
             networkCapabilities: NetworkCapabilities
         ) {
             val isInternet = networkCapabilities.hasCapability(NET_CAPABILITY_INTERNET)
-            val isValidated = networkCapabilities.hasCapability(NET_CAPABILITY_VALIDATED)
-            postValue(isInternet && isValidated)
+            postValue(isInternet)
         }
 
         override fun onLost(network: Network) {

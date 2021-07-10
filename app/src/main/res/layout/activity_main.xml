@@ -28,22 +28,29 @@
             android:imeOptions="actionSearch"
             android:inputType="textNoSuggestions"
             android:maxLines="1"
+            android:selectAllOnFocus="true"
             tools:text="Sample search" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:layout_width="0dp"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_layout"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:padding="10dp"
-        android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/search_input_layout"
-        tools:itemCount="10"
-        tools:listitem="@layout/holder_image" />
+        app:layout_constraintTop_toBottomOf="@id/search_input_layout">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            android:scrollbars="vertical"
+            tools:itemCount="10"
+            tools:listitem="@layout/holder_image" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <TextView
         android:id="@+id/no_data_view"

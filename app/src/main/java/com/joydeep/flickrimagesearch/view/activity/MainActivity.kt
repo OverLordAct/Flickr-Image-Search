@@ -28,14 +28,18 @@ class MainActivity : AppCompatActivity() {
     private val pagingAdapter = ImagePagingAdapter()
 
     private val viewModel by viewModels<MainActivityViewModel>()
+    private lateinit var connectivityWatcher: ConnectivityWatcher
 
     @ExperimentalCoroutinesApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        ConnectivityWatcher(this).observe(this) {
-            if (it == false) {
-                Snackbar.make(binding.root, "No Internet Available", Snackbar.LENGTH_SHORT).show()
+        connectivityWatcher = ConnectivityWatcher(this)
+        connectivityWatcher.observe(this) {
+            it?.let {
+                if (!it) Snackbar.make(binding.root, "No Internet Available", Snackbar.LENGTH_SHORT)
+                    .show()
+
             }
         }
 
@@ -46,8 +50,17 @@ class MainActivity : AppCompatActivity() {
             pagingAdapter.retry()
         }
 
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            pagingAdapter.refresh()
+        }
+
         initAdapter()
         initTextInput()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        connectivityWatcher.removeObservers(this)
     }
 
     private fun initAdapter() {
@@ -75,6 +88,27 @@ class MainActivity : AppCompatActivity() {
                     if (viewModel.scrollToTop) {
                         binding.recyclerView.scrollToPosition(0)
                         viewModel.scrollToTop = false
+                    }
+                }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            pagingAdapter.loadStateFlow
+                .collect {
+                    when (it.mediator?.refresh) {
+                        is LoadState.Loading -> {
+                            viewModel.scrollToTop = true
+                        }
+
+                        is LoadState.Error -> {
+                            binding.swipeRefreshLayout.isRefreshing = false
+                            viewModel.scrollToTop = false
+                        }
+
+                        is LoadState.NotLoading -> {
+                            binding.swipeRefreshLayout.isRefreshing = false
+                            viewModel.scrollToTop = true
+                        }
                     }
                 }
         }
