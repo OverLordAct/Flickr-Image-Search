@@ -27,8 +27,6 @@ class ImageHolder(private val binding: HolderImageBinding) : RecyclerView.ViewHo
 //            .transition(DrawableTransitionOptions.withCrossFade())
             .placeholder(shimmerDrawable)
             .into(binding.imageView)
-
-        binding.textView.text = url
     }
 
 }

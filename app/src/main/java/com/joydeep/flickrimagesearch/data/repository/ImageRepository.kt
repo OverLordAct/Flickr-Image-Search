@@ -6,11 +6,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.joydeep.flickrimagesearch.data.api.ApiService
 import com.joydeep.flickrimagesearch.data.db.ImageDatabase
-import com.joydeep.flickrimagesearch.model.PhotoEntity
-import com.joydeep.flickrimagesearch.model.PhotoEntity2
+import com.joydeep.flickrimagesearch.model.Image
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.debounce
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,53 +19,31 @@ class ImageRepository @Inject constructor(
 
     companion object {
         private const val PAGE_SIZE = 20
+        private const val INITIAL_SIZE = 35
     }
 
-    fun getImages(queryText: String): Flow<PagingData<PhotoEntity2>> {
+    fun getImages(queryText: String, refreshOnInit: Boolean): Flow<PagingData<Image>> {
         val pagingSource = {
-            imageDatabase.getPhoto2Dao().getPhotosByQuery(queryText)
+            imageDatabase.getImageDao().getPhotosByQuery(queryText)
         }
 
         @OptIn(ExperimentalPagingApi::class)
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
-                maxSize = 100
+                initialLoadSize = INITIAL_SIZE,
+                enablePlaceholders = false
             ),
             pagingSourceFactory = pagingSource,
-            remoteMediator = ImageRemoteMediator(queryText, apiService, imageDatabase)
+            remoteMediator = ImageRemoteMediator(queryText, apiService, imageDatabase, refreshOnInit)
         ).flow
     }
 
-    suspend fun getPhotos(queryString: String): List<PhotoEntity> {
-        val map = mutableMapOf<String, String>().apply {
-            this["api_key"] = "5cda947b931a0ade4161d0004589a7b0"
-            this["text"] = queryString
-            this["per_page"] = "20"
-            this["page"] = "1"
-            this["format"] = "json"
-            this["nojsoncallback"] = "1"
-        }
-        return apiService.getImageLinks(map).photos.photo.map { photo ->
-            val url =
-                "https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}.jpg"
-            PhotoEntity(photoId = photo.id, searchQuery = queryString, url = url)
-        }
+    fun getLastSearchQuery(): Flow<String> {
+        return imageDatabase.getImageDao().getLastQuery()
     }
 
-    suspend fun getPhotosFlow(queryString: String): Flow<PhotoEntity> {
-        val map = mutableMapOf<String, String>().apply {
-            this["api_key"] = "5cda947b931a0ade4161d0004589a7b0"
-            this["text"] = queryString
-            this["per_page"] = "20"
-            this["page"] = "1"
-            this["format"] = "json"
-            this["nojsoncallback"] = "1"
-        }
-        return apiService.getImageLinks(map).photos.photo.map { photo ->
-            val url =
-                "https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}.jpg"
-            PhotoEntity(photoId = photo.id, searchQuery = queryString, url = url)
-        }.asFlow()
+    suspend fun getLastQuery(): String {
+        return imageDatabase.getImageDao().getLastQuery2()
     }
 }

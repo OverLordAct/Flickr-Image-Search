@@ -1,74 +1,56 @@
 package com.joydeep.flickrimagesearch.viewmodel
 
-import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.joydeep.flickrimagesearch.data.repository.ImageRepository
-import com.joydeep.flickrimagesearch.model.PhotoEntity
-import com.joydeep.flickrimagesearch.model.PhotoEntity2
+import com.joydeep.flickrimagesearch.model.Image
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-const val TEST = "TESTING"
-
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
-    private val repository: ImageRepository
+    private val repository: ImageRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private var currentQueryString = MutableLiveData<String>()
-    var currentSearchResult: Flow<PagingData<PhotoEntity2>> =
-        currentQueryString.asFlow().flatMapLatest { query ->
-            repository.getImages(query)
-        }.cachedIn(viewModelScope)
-
-    fun getImages(queryString: String) {
-        Log.d(TEST, "getImages called in viewModel")
-        if (queryString == currentQueryString.value) return
-
-        currentQueryString.value = queryString
-//        currentQueryString = queryString
-//        val newResult = repository.getImages(queryString).cachedIn(viewModelScope)
-//        currentSearchResult = newResult
-//        Log.d(TEST, "getImages $currentSearchResult")
-//        return newResult
-
-
+    companion object {
+        private const val LAST_SEARCH_QUERY: String = "LAST_SEARCH_QUERY"
     }
 
-    var photosLiveData = MutableLiveData<List<PhotoEntity>>()
+    private var refreshOnInit = false
+    var scrollToTop = false
 
-    fun getPhotos(queryString: String) {
-        viewModelScope.launch {
-            photosLiveData.value = repository.getPhotos(queryString)
+    var currentQueryString: MutableLiveData<String> =
+        savedStateHandle.getLiveData(
+            LAST_SEARCH_QUERY,
+            repository.getLastSearchQuery().asLiveData().value
+        )
+
+    var currentSearchResult: Flow<PagingData<Image>> =
+        currentQueryString.asFlow().flatMapLatest { query ->
+            query?.let {
+                repository.getImages(query, refreshOnInit)
+            } ?: emptyFlow()
+        }.cachedIn(viewModelScope)
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val lastQuery = repository.getLastQuery()
+            currentQueryString.postValue(lastQuery)
         }
     }
 
-    private var currentQuery = MutableLiveData<String>()
-
-//    @ExperimentalCoroutinesApi
-//    val searchResults = currentQuery.asFlow().flatMapLatest { query ->
-//        query?.let {
-//            repository.getPhotosFlow(query)
-//        } ?: emptyFlow()
-//    }.asLiveData()
-
-    val searchResults = currentQuery.asFlow().flatMapLatest { query ->
-        query?.let {
-            repository.getPhotosFlow(query)
-        } ?: emptyFlow()
-    }
-
-    fun getPhotosFlow(queryString: String) {
-        currentQuery.value = queryString
+    fun getImages(queryString: String) {
+        if (queryString == currentQueryString.value) return
+        refreshOnInit = true
+        savedStateHandle[LAST_SEARCH_QUERY] = queryString
+        currentQueryString.value = queryString
+        scrollToTop = true
     }
 }

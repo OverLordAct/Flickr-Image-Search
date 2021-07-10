@@ -5,10 +5,9 @@ import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.joydeep.flickrimagesearch.databinding.HolderImageBinding
-import com.joydeep.flickrimagesearch.model.PhotoEntity
-import com.joydeep.flickrimagesearch.model.PhotoEntity2
+import com.joydeep.flickrimagesearch.model.Image
 
-class ImageAdapter : PagingDataAdapter<PhotoEntity2, ImageHolder>(ImageHolderComparator()) {
+class ImagePagingAdapter : PagingDataAdapter<Image, ImageHolder>(ImageHolderComparator()) {
 
     override fun onBindViewHolder(holder: ImageHolder, position: Int) {
         val item = getItem(position)
@@ -20,12 +19,12 @@ class ImageAdapter : PagingDataAdapter<PhotoEntity2, ImageHolder>(ImageHolderCom
         return ImageHolder(binding)
     }
 
-    class ImageHolderComparator : DiffUtil.ItemCallback<PhotoEntity2>() {
-        override fun areItemsTheSame(oldItem: PhotoEntity2, newItem: PhotoEntity2): Boolean {
+    class ImageHolderComparator : DiffUtil.ItemCallback<Image>() {
+        override fun areItemsTheSame(oldItem: Image, newItem: Image): Boolean {
             return oldItem.url == newItem.url
         }
 
-        override fun areContentsTheSame(oldItem: PhotoEntity2, newItem: PhotoEntity2): Boolean {
+        override fun areContentsTheSame(oldItem: Image, newItem: Image): Boolean {
             return oldItem == newItem
         }
     }

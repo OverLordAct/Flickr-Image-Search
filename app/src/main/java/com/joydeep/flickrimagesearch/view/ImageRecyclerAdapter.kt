@@ -4,10 +4,10 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.joydeep.flickrimagesearch.databinding.HolderImageBinding
-import com.joydeep.flickrimagesearch.model.PhotoEntity
+import com.joydeep.flickrimagesearch.model.Image
 
 class ImageRecyclerAdapter(
-    private var list: MutableList<PhotoEntity>
+    private var list: MutableList<Image>
 ) : RecyclerView.Adapter<ImageHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageHolder {
         val binding = HolderImageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -21,7 +21,7 @@ class ImageRecyclerAdapter(
 
     override fun getItemCount(): Int = list.size
 
-    fun updateData(newList: List<PhotoEntity>) {
+    fun updateData(newList: List<Image>) {
         list.clear()
         list.addAll(newList)
         notifyDataSetChanged()

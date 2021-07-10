@@ -19,7 +19,7 @@ class LoadStateHolder(
         }
 
         binding.retryButton.isVisible = loadState is LoadState.Error
-        binding.progressBar.isVisible = loadState is LoadState.Loading
         binding.errorMessage.isVisible = loadState is LoadState.Error
+        binding.progressBar.isVisible = loadState is LoadState.Loading
     }
 }

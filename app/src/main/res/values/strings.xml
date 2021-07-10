@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Flickr Image Search</string>
+    <string name="retry">Retry</string>
+    <string name="something_went_wrong">No Images Available</string>
 </resources>
