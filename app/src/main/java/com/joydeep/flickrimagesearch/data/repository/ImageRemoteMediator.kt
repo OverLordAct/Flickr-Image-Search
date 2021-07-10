@@ -41,7 +41,10 @@ class ImageRemoteMediator(
         state: PagingState<Int, Image>
     ): MediatorResult {
         val page = when (loadType) {
-            LoadType.REFRESH -> INITIAL_PAGE
+            LoadType.REFRESH -> {
+                val remoteKey = getRemoteKeyClosestToCurrentPosition(state)
+                remoteKey?.nextKey?.minus(1) ?: INITIAL_PAGE
+            }
             LoadType.APPEND -> remoteDao.getRemoteKeyForQuery(query).nextKey
             LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
         }
@@ -102,5 +105,16 @@ class ImageRemoteMediator(
             "format" to "json",
             "nojsoncallback" to "1"
         )
+    }
+
+    private suspend fun getRemoteKeyClosestToCurrentPosition(
+        state: PagingState<Int, Image>
+    ): RemoteKey? {
+
+        return state.anchorPosition?.let { position ->
+            state.closestItemToPosition(position)?.searchQuery?.let { searchQuery ->
+                remoteDao.getRemoteKeyForQuery(searchQuery)
+            }
+        }
     }
 }
